@@ -14,6 +14,7 @@ This website serves as a central hub for the AMX Mod X Timer Plugin community, o
 - **Individual Map Top15:** View top15 records for individual maps, categorized by different timer categories.
 - **Top Based on Points:** Explore a top list based on accumulated points from various records.
 - **Player Statistics:** Search for a player and view detailed statistics, including playtime, medals, points, and all their records.
+- **Note** It has a very crude implementation of a login system for the administrators to easily delete wrong/cheated records. 
 
 ## Usage
 
