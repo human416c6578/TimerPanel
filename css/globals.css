@@ -1,0 +1,19 @@
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Rotate the chart on mobile devices */
+@media only screen and (max-width: 768px) {
+    .chart-container {
+        transform: rotate(90deg);
+        transform-origin: left top; /* Adjust the origin of the transformation */
+        height: 100vh; /* Ensure the container takes full viewport height */
+    }
+}
