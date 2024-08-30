@@ -14,6 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Call the get_records function with the search criteria
         $activity_dr = $db->get_player_activity($postData->id, "played_time_info");
         $activity_bhop = $db->get_player_activity($postData->id, "played_time_info_bhop");
+        $activity_br = $db->get_player_activity($postData->id, "played_time_info_br");
+        $activity_br_dr = $db->get_player_activity($postData->id, "played_time_info_br_dr");
 
         // Send the records as JSON response
         header('Content-Type: application/json');
@@ -21,7 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $response = array(
             'activity_dr' => json_decode($activity_dr),
-            'activity_bhop' => json_decode($activity_bhop)
+            'activity_bhop' => json_decode($activity_bhop),
+            'activity_br' => json_decode($activity_br),
+            'activity_br_dr' => json_decode($activity_br_dr)
         );
 
         echo json_encode($response);

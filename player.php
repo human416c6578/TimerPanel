@@ -1138,16 +1138,20 @@ async function activityChart() {
 	const activity = await fetchActivity(params.id); // Fetch the activity data
 	const data_dr = prepareData(activity.activity_dr, "Deathrun"); // Prepare data for Chart.js
 	const data_bhop = prepareData(activity.activity_bhop, "Bhop"); // Prepare data for Chart.js
+	const data_br = prepareData(activity.activity_br, "Brasil Bhop"); // Prepare data for Chart.js
+	const data_br_dr = prepareData(activity.activity_br_dr, "Brasil DR"); // Prepare data for Chart.js
 	const data = {
 		labels: data_dr.labels,
-		datasets: [...data_dr.datasets, ...data_bhop.datasets] // Merge datasets
+		datasets: [...data_dr.datasets, ...data_bhop.datasets, ...data_br.datasets, ...data_br_dr.datasets] // Merge datasets
 	};
 
 	function getStackColor(stack) {
 
 		const baseColors = {
 			'Deathrun': 'rgba(255, 162, 0, 1.0)',
-			'Bhop': 'rgba(0, 255, 255, 1.0)'
+			'Bhop': 'rgba(0, 255, 255, 1.0)',
+			'Brasil Bhop': 'rgba(0, 255, 162, 1.0)',
+			'Brasil DR': 'rgba(255, 0, 162, 1.0)'
 		};
 
 		return baseColors[stack];
@@ -1165,7 +1169,17 @@ async function activityChart() {
 				r: 0,
 				g: 255,
 				b: 255
-			} // Light Cyan (light blue-green)
+			}, // Light Cyan (light blue-green)
+			'Brasil Bhop': {
+				r: 162,
+				g: 255,
+				b: 0
+			}, 
+			'Brasil DR': {
+				r: 255,
+				g: 0,
+				b: 162
+			} 
 		};
 
 		// Get base color
