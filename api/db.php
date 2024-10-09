@@ -612,7 +612,7 @@ ORDER BY
         $conn->close();
     }
 
-    function delete_player($id)
+    function delete_player($id, $rank1Records)
     {
         global $servername, $username, $password, $database;
         $conn = new mysqli($servername, $username, $password, $database);
@@ -620,9 +620,16 @@ ORDER BY
             die("Connection failed: " . $conn->connect_error);
         }
 
+        // Iterate through the rank1Records array
+        foreach ($rank1Records as $record) {
+            $category = isset($record['category']) ? $record['category'] : 'N/A';
+            $map = isset($record['map']) ? $record['map'] : 'N/A';
+            unlink('/home/csgfxeu/public_html/uploads/recording/'.$map.'/'.'['.$category.'].rec');
+        }
+
         // Define the SQL query with placeholders
         $sql = "DELETE FROM Times WHERE UserId = ?";
-
+    
         // Prepare the statement
         $stmt = $conn->prepare($sql);
 
@@ -631,15 +638,14 @@ ORDER BY
 
         // Execute the query
         $stmt->execute();
-        // Get the result set
-        $result = $stmt->get_result();
 
         // Close the statement and connection
         $stmt->close();
         $conn->close();
 
-        return "Success!";
+        return "Succes!";
     }
+
 
     function delete_time($id)
     {
@@ -787,7 +793,7 @@ ORDER BY
     function get_servers_info()
     {
         $servers[] = $this->get_server_info("193.84.64.85", 27015);
-        $servers[] = $this->get_server_info("152.67.42.202", 27015);
+        $servers[] = $this->get_server_info("190.115.197.245", 27015);
         $servers[] = $this->get_server_info("93.114.82.74", 27015);
 
         return $servers;

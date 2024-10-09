@@ -575,11 +575,15 @@ function deleteRecords() {
 			`You are going to delete all records of player ${name} (ID: ${params.id}).\nAre you sure?`
 		)) {
 
+		const rank1Records = playerRecords.filter(record => record.rank === 1);
+		const rank1RecordsJson = JSON.stringify(rank1Records);
+
 		sendPostRequest("./api/delete_player.php",
-			`id=${params.id}`,
+			`id=${params.id}&rank1Records=${encodeURIComponent(rank1RecordsJson)}`,
 			function(response) {
 				console.log(response);
-			});
+			}
+		);
 		alert(
 			`You deleted all records for user ${name} (ID: ${params.id}).`
 		);
@@ -626,11 +630,10 @@ function displayActivity() {
 </script>
 
 <script>
+let playerRecords = [];
+let filteredRecords = [];
 function recordsTable() {
 	const cups = ["gold_cup", "silver_cup", "bronze_cup"];
-	let player = {};
-	let playerRecords = [];
-	let filteredRecords = [];
 	const itemsPerPage = 10; // Number of records to display per page
 	let currentPage = 1;
 	let totalPages = 1;
