@@ -612,6 +612,35 @@ ORDER BY
         $conn->close();
     }
 
+    function delete_player($id)
+    {
+        global $servername, $username, $password, $database;
+        $conn = new mysqli($servername, $username, $password, $database);
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        // Define the SQL query with placeholders
+        $sql = "DELETE FROM Times WHERE UserId = ?";
+
+        // Prepare the statement
+        $stmt = $conn->prepare($sql);
+
+        // Bind the parameters to the placeholders
+        $stmt->bind_param("i", $id);
+
+        // Execute the query
+        $stmt->execute();
+        // Get the result set
+        $result = $stmt->get_result();
+
+        // Close the statement and connection
+        $stmt->close();
+        $conn->close();
+
+        return "Success!";
+    }
+
     function delete_time($id)
     {
         global $servername, $username, $password, $database;

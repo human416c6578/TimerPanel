@@ -174,7 +174,14 @@ if (isset($playerData['steamid'])) {
 				</div>
 				<div class="flex flex-col">
 					<span
-						class="self-center m-2 py-1 px-2 font-semibold text-md bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% rounded ring-1 ring-cyan-500"><?php echo$playerData["steamid"]?></span>
+						class="self-center m-2 py-1 px-2 font-semibold text-md bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% rounded ring-1 ring-cyan-500"><?php echo$playerData["steamid"]?>
+					</span>
+				</div>
+				<div id="deleteBtn" style="display:none" class="flex flex-col">
+					<button
+						class="self-center m-2 py-1 px-4 font-semibold text-md text-white bg-red-500 rounded hover:bg-white hover:text-red-500 transition-colors duration-300"
+						onclick="deleteRecords()">Delete Player Records
+					</button>
 
 				</div>
 			</div>
@@ -201,7 +208,7 @@ if (isset($playerData['steamid'])) {
 				<!--
                     <div class="flex flex-row justify-between">
                         <span class="self-center m-2 py-1 px-2 font-semibold text-md bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% rounded ring-1 ring-cyan-500">WR</span>
-                        <span id="wrCount" class="m-2 py-1 px-4 bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% rounded"><?php echo $playerData["wrs"] ?></span>
+                        <span id="wrCount" class="m-2 py-1 px-4 bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% rounded">?php echo $playerData["wrs"] ?></span>
                     </div>
                     -->
 				<div class="flex flex-row justify-between">
@@ -535,6 +542,61 @@ if (isset($playerData['steamid'])) {
 </footer>
 
 </html>
+
+
+<script>
+let loggedin = false;
+
+function sendPostRequest(url, data, callback) {
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST", url, true);
+	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+	xhr.setRequestHeader("Authorization", localStorage.getItem("token"));
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState === 4 && xhr.status === 200) {
+			callback(xhr.responseText);
+		} else if (xhr.status === 403) {
+			//
+		}
+	};
+	xhr.send(data);
+}
+
+sendPostRequest("./api/login.php", ``, function(response) {
+	loggedin = true;
+	let deleteBtn = document.getElementById("deleteBtn");
+	deleteBtn.style.display = "block";
+});
+
+function deleteRecords() {
+	const params = getUrlParams();
+	const name = <?php echo json_encode(mb_convert_encoding($playerData["name"], 'UTF-8', "auto")); ?>;
+	if (confirm(
+			`You are going to delete all records of player ${name} (ID: ${params.id}).\nAre you sure?`
+		)) {
+
+		sendPostRequest("./api/delete_player.php",
+			`id=${params.id}`,
+			function(response) {
+				console.log(response);
+			});
+		alert(
+			`You deleted all records for user ${name} (ID: ${params.id}).`
+		);
+	}
+}
+
+function getUrlParams() {
+	const searchParams = new URLSearchParams(window.location.search);
+	const params = {};
+
+	for (const [key, value] of searchParams.entries()) {
+		params[key] = value;
+	}
+
+	return params;
+}
+</script>
 
 <script>
 let recordsContainer = document.getElementById("records-container");
@@ -1133,7 +1195,7 @@ medalsTable();
 <script>
 async function activityChart() {
 	const ctx = document.getElementById('activityChart').getContext('2d');
-    document.getElementById('activityChart').style.height = '500px'
+	document.getElementById('activityChart').style.height = '500px'
 	const params = getUrlParams();
 	const activity = await fetchActivity(params.id); // Fetch the activity data
 	const data_dr = prepareData(activity.activity_dr, "Deathrun"); // Prepare data for Chart.js
@@ -1142,7 +1204,9 @@ async function activityChart() {
 	const data_br_dr = prepareData(activity.activity_br_dr, "Brasil DR"); // Prepare data for Chart.js
 	const data = {
 		labels: data_dr.labels,
-		datasets: [...data_dr.datasets, ...data_bhop.datasets, ...data_br.datasets, ...data_br_dr.datasets] // Merge datasets
+		datasets: [...data_dr.datasets, ...data_bhop.datasets, ...data_br.datasets, ...data_br_dr
+			.datasets
+		] // Merge datasets
 	};
 
 	function getStackColor(stack) {
@@ -1174,12 +1238,12 @@ async function activityChart() {
 				r: 162,
 				g: 255,
 				b: 0
-			}, 
+			},
 			'Brasil DR': {
 				r: 255,
 				g: 0,
 				b: 162
-			} 
+			}
 		};
 
 		// Get base color
@@ -1209,6 +1273,7 @@ async function activityChart() {
 				y: {
 					beginAtZero: true,
 					stacked: true,
+					min: 0,
 					title: {
 						display: true,
 						text: 'Minutes',
