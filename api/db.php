@@ -414,7 +414,7 @@ class db
         if ($conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
         }
-        $sql = "SELECT * FROM Users WHERE INSTR(Name,'" . $name . "') LIMIT 5";
+        $sql = "SELECT * FROM Users WHERE INSTR(Name,'" . $name . "') OR INSTR(AuthId,'" . $name . "') LIMIT 5";
         $result = $conn->query($sql);
         if ($result->num_rows > 0) {
             $players = array();
@@ -554,6 +554,45 @@ ORDER BY
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
             return json_encode($row["Name"]);
+        } else {
+            return "Invalid Map";
+        }
+        $conn->close();
+    }
+
+    function get_map_logs($id)
+    {
+        global $servername, $username, $password, $database;
+        $conn = new mysqli($servername, $username, $password, $database);
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $sql = "SELECT l.id, u.id AS UserId, u.Name, u.AuthId, l.UpdateTime, l.PreviousValues, l.NewValues FROM Zones_Logs l JOIN Users u ON l.UserId = u.id WHERE MapId = ?";
+        // Prepare the statement
+        $stmt = $conn->prepare($sql);
+
+        // Bind the MapId to the placeholder
+        $stmt->bind_param("i", $id);
+
+        // Execute the query
+        $stmt->execute();
+
+        // Get the result set
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            $logs = array();
+            while($row = $result->fetch_assoc()) {
+                array_push($logs, array(
+                    'id' => $row["id"],
+                    'userId' => $row["UserId"],
+                    'userName' => $row["Name"],
+                    'userAuthId' => $row["AuthId"],
+                    'updateTime' => $row["UpdateTime"],
+                    'previousValues' => json_decode($row["PreviousValues"]),
+                    'newValues' => json_decode($row["NewValues"])
+                ));
+            }
+            return json_encode($logs);
         } else {
             return "Invalid Map";
         }

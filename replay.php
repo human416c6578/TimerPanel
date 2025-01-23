@@ -10,7 +10,7 @@
         {
             var head= document.getElementsByTagName('head')[0];
             var script= document.createElement('script');
-            script.src= './dist/hlviewer202.js';
+            script.src= './dist/hlviewer19.min.js';
             head.appendChild(script);
         }
         load_js();
@@ -71,7 +71,11 @@
                     <a href="records.php" class="block py-2 pl-3 pr-4 rounded md:hover:bg-transparent md:p-0 text-white dark:text-white hover:bg-gray-700 dark:hover:bg-gray-700 hover:text-white dark:hover:text-white md:dark:hover:bg-transparent border-gray-700 dark:border-gray-700 md:hover:text-blue-700 md:dark:hover:text-blue-500">Records</a>
                 </li>
                 <li>
-					<a href="top.php" class="block py-2 pl-3 pr-4 rounded md:hover:bg-transparent md:p-0 text-white dark:text-white hover:bg-gray-700 dark:hover:bg-gray-700 hover:text-white dark:hover:text-white md:dark:hover:bg-transparent border-gray-700 dark:border-gray-700 md:hover:text-blue-700 md:dark:hover:text-blue-500">Top</a></li>
+					<a href="top.php" class="block py-2 pl-3 pr-4 rounded md:hover:bg-transparent md:p-0 text-white dark:text-white hover:bg-gray-700 dark:hover:bg-gray-700 hover:text-white dark:hover:text-white md:dark:hover:bg-transparent border-gray-700 dark:border-gray-700 md:hover:text-blue-700 md:dark:hover:text-blue-500">Top</a>
+                </li>
+                <li>
+                    <a href="logs.php" class="block py-2 pl-3 pr-4 rounded md:hover:bg-transparent md:p-0 text-white dark:text-white hover:bg-gray-700 dark:hover:bg-gray-700 hover:text-white dark:hover:text-white md:dark:hover:bg-transparent border-gray-700 dark:border-gray-700 md:hover:text-blue-700 md:dark:hover:text-blue-500">Logs</a>
+                </li>
                 <li>
                     <a href="https://discord.gg/r8k5J3TASC" class="block py-2 pl-3 pr-4 rounded md:hover:bg-transparent md:p-0 text-white dark:text-white hover:bg-gray-700 dark:hover:bg-gray-700 hover:text-white dark:hover:text-white md:dark:hover:bg-transparent border-gray-700 dark:border-gray-700 md:hover:text-blue-700 md:dark:hover:text-blue-500">Discord</a>
                 </li>
@@ -102,7 +106,7 @@
         </div>
 
         <div class="relative flex flex-col justify-center overflow-hidden bg-gradient-to-r from-blue-500 to-red-500 rounded h-2/6 xl:w-6/12 w-full py-6 xl:px-6 px-0 z-10">
-            <span class="self-center text-2xl font-semibold text-white dark:text-white mb-6"><?php GET ?></span>
+            <span class="self-center text-2xl font-semibold text-white dark:text-white mb-6">Replay</span>
             <div class="not-prose relative rounded-xl overflow-hidden bg-slate-800 dark:bg-slate-800">
                 <div class="absolute inset-0 [mask-image:linear-gradient(0deg,#fff,rgba(255,255,255,0.6))] bg-grid-slate-700/25 dark:bg-grid-slate-700/25 dark:[mask-image:linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.5))]" style="background-position: 10px 10px;"></div>
                 <div class="relative rounded-xl overflow-auto no-scrollbar">
@@ -116,6 +120,8 @@
         </div>
         <div class="relative flex flex-col items-center justify-center overflow-hidden bg-gray-900 dark:bg-gray-900 rounded xl:w-2/12 w-10/12 py-6 px-6 z-10">
             <!-- Right column -->
+        	<button id="downloadBtn" class="self-center m-2 py-1 px-4 font-semibold text-md text-white bg-red-500 rounded hover:bg-white hover:text-red-500 transition-colors duration-300">Download</button>    
+	</div>
         </div>
     </div>
 
@@ -172,7 +178,6 @@
 </html>
 
 <script>
-    
     window.addEventListener('load', async () => {
         // Initialize variables
         let mapName = '';
@@ -235,15 +240,33 @@
             replays: '../uploads/recording',
             maps: `get_resources.php?url=${resourceUrl}maps`,
             wads: `get_resources.php?url=${resourceUrl}`,
-            skies: 'get_resources.php?url=${resourceUrl}gfx/env',
+            skies: `get_resources.php?url=${resourceUrl}gfx/env`,
             sounds: `get_resources.php?url=${resourceUrl}sound`,
         };
 
         // Initialize and load the viewer
         const viewer = HLViewer.init('#hlv-target', { paths });
-        viewer.load(`${mapName}.bsp`);
-        viewer.load(`${mapName}/[${categoryName}].rec`);
-    });
+        await viewer.load(`${mapName}.bsp`);
+        await viewer.load(`${mapName}/[${categoryName}].rec`);
+
+	document.getElementById("downloadBtn").addEventListener("click", () => {
+    		// Create a link element
+   		 const link = document.createElement("a");
+
+    		// Construct the file URL
+    		const fileURL = `https://cs-gfx.eu/uploads/recording/${mapName}/[${categoryName}].rec`;
+
+    		// Configure the link
+    		link.href = fileURL;
+    		link.download = `${mapName} - [${categoryName}].rec`; // The file name for the download
+
+    		// Trigger the download
+    		link.click();
+
+    		// Optionally remove the link element after triggering the download
+    		link.remove();
+	});
+});	
 
     // Utility function to get URL parameters
     function getUrlParams() {
