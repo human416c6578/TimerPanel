@@ -623,6 +623,53 @@ ORDER BY
         $conn->close();
     }
 
+    function get_zones_last_update()
+    {
+        global $servername, $username, $password, $database;
+        $conn = new mysqli($servername, $username, $password, $database);
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $sql = "SELECT UpdateTime FROM Zones_Logs zl ORDER BY UpdateTime DESC LIMIT 1;";
+
+        $result = $conn->query($sql);
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            return strtotime($row["UpdateTime"]);
+        } else {
+            return "Invalid Map";
+        }
+
+        $conn->close();
+    }
+    
+    function update_zones_file()
+    {
+        global $servername, $username, $password, $database;
+        $conn = new mysqli($servername, $username, $password, $database);
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        $sql = "SELECT m.Name, z.StartFX, z.StartFY, z.StartFZ, z.StartLX, z.StartLY, z.StartLZ, z.FinishFX, z.FinishFY, z.FinishFZ, z.FinishLX, z.FinishLY, z.FinishLZ  FROM Zones z LEFT JOIN Maps m ON z.MapId = m.id";
+        $result = $conn->query($sql);
+        if ($result->num_rows > 0) {
+            $myfile = fopen("zones.txt", "w");
+            while ($row = $result->fetch_assoc()) {
+                $txt = "" . $row["Name"] .
+                    ", " . $row["StartFX"] . ", " . $row["StartFY"] . ", " . $row["StartFZ"] .
+                    ", " . $row["StartLX"] . ", " . $row["StartLY"] . ", " . $row["StartLZ"] . "" .
+                    ", " . $row["FinishFX"] . ", " . $row["FinishFY"] . ", " . $row["FinishFZ"] . "" .
+                    ", " . $row["FinishLX"] . ", " . $row["FinishLY"] . ", " . $row["FinishLZ"] . "\n";
+                
+                fwrite($myfile, $txt); 
+            }
+            return "1";
+        } else {
+            return "0";
+        }
+        $conn->close();
+    }
+
     function get_category_name($id)
     {
         global $servername, $username, $password, $database;
