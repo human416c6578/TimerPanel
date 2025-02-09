@@ -168,31 +168,27 @@ class db
 
         // Define the SQL query with a placeholder for the player's name
         $sql = "
-    SELECT
-        (
-            SELECT COUNT(*)
-            FROM Times t2
-            WHERE t2.MapId = t.MapId
-            AND t2.CategoryId = t.CategoryId
-            AND t2.`Time` < t.`Time`
-        ) + 1 AS Rank,
-        m.id AS MapId,
-        m.Name AS MapName,
-        c.Name AS CategoryName,
-        c.id AS CategoryId,
-        t.`Time`,
-        t.RecordDate,
-        t.StartSpeed
-    FROM
-        Times t
-    JOIN
-        Maps m ON t.MapId = m.id
-    JOIN
-        Categories c ON t.CategoryId = c.id
-    WHERE
-        t.UserId = ? 
-    ORDER BY
-        m.id, c.id
+    WITH RankedTimes AS (
+		SELECT 
+			t.UserId AS UserId,
+			m.id AS MapId,
+			m.Name AS MapName,
+			c.Name AS CategoryName,
+			c.id AS CategoryId,
+			t.Time AS Time,
+			t.RecordDate AS RecordDate,
+			t.StartSpeed AS StartSpeed,
+			ROW_NUMBER() OVER (PARTITION BY t.MapId, t.CategoryId ORDER BY t.Time ASC) AS Rank
+		FROM 
+			Times t
+		INNER JOIN 
+			Maps m ON t.MapId = m.id
+		INNER JOIN 
+			Categories c ON t.CategoryId = c.id
+	)
+	SELECT Rank, MapId, MapName, CategoryName, CategoryId, Time, RecordDate, StartSpeed
+	FROM RankedTimes
+	WHERE UserId = ?
     ";
 
         // Prepare the statement
@@ -321,6 +317,97 @@ class db
    
             }
             return json_encode($activity);
+        } else {
+            return "0";
+        }
+
+        // Close the statement and connection
+        $stmt->close();
+        $conn->close();
+    }
+
+    function get_nulls($name, $strafes, $overlaps)
+    {
+        global $servername, $username, $password, $database;
+        $conn = new mysqli($servername, $username, $password, $database);
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
+        // Define the SQL query with placeholders
+        $sql = "WITH RankedTimes AS (
+                SELECT 
+                    t.UserId AS UserId,
+                    u.Name AS UserName,
+                    u.AuthId,
+                    u.Nationality,
+                    m.id AS MapId,
+                    m.Name AS MapName,
+                    c.id AS CategoryId,
+                    c.Name AS CategoryName,
+                    t.Time,
+                    t.Jumps,
+                    t.Strafes,
+                    t.Overlaps,
+                    t.OverlapsSD,
+                    t.RecordDate,
+                    ROW_NUMBER() OVER (PARTITION BY t.MapId, t.CategoryId ORDER BY t.Time ASC) AS Rank
+                FROM 
+                    Times t
+                JOIN Users u ON t.UserId = u.id
+                JOIN Maps m ON t.MapId = m.id
+                JOIN Categories c ON t.CategoryId = c.id
+            )
+            SELECT 
+                Rank,
+                MapName,
+                CategoryName,
+                UserName,
+                AuthId,
+                Nationality,
+                Time,
+                Jumps,
+                Strafes,
+                Overlaps,
+                OverlapsSD,
+                RecordDate
+            FROM RankedTimes
+            WHERE 
+                (UserName LIKE CONCAT('%', ?, '%') OR AuthId LIKE CONCAT('%', ?, '%'))
+                AND Strafes >= ?
+                AND Overlaps <= ?
+            ORDER BY RecordDate DESC
+            LIMIT 100;";
+
+
+        // Prepare the statement
+        $stmt = $conn->prepare($sql);
+
+        // Bind the parameters to the placeholders
+        $stmt->bind_param("ssii", $name, $name, $strafes, $overlaps);
+
+        // Execute the query
+        $stmt->execute();
+
+        // Get the result set
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $records = array();
+            while ($row = $result->fetch_assoc()) {
+                array_push($records, array(
+                    'map' => $row["MapName"],
+                    'category' => $row["CategoryName"],
+                    'name' => $row["UserName"],
+                    'steamid' => $row["AuthId"],
+                    'rank' => $row["Rank"],
+                    'strafes' => $row["Strafes"],
+                    'overlaps' => $row["Overlaps"],
+                    'overlapsSD' => $row["OverlapsSD"],
+                    'recorddate' => $row["RecordDate"],
+                ));
+            }
+            return json_encode($records);
         } else {
             return "0";
         }
@@ -698,7 +785,7 @@ ORDER BY
         $conn->close();
     }
 
-    function delete_player($id, $rank1Records)
+    function delete_player($id, $rank1Records, $date)
     {
         global $servername, $username, $password, $database;
         $conn = new mysqli($servername, $username, $password, $database);
@@ -714,13 +801,13 @@ ORDER BY
         }
 
         // Define the SQL query with placeholders
-        $sql = "DELETE FROM Times WHERE UserId = ?";
+        $sql = "DELETE FROM Times WHERE UserId = ? AND RecordDate < ?";
     
         // Prepare the statement
         $stmt = $conn->prepare($sql);
 
         // Bind the parameters to the placeholders
-        $stmt->bind_param("i", $id);
+        $stmt->bind_param("is", $id, $date);
 
         // Execute the query
         $stmt->execute();

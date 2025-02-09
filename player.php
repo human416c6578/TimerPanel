@@ -180,7 +180,8 @@ if (isset($playerData['steamid'])) {
 						class="self-center m-2 py-1 px-2 font-semibold text-md bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% rounded ring-1 ring-cyan-500"><?php echo$playerData["steamid"]?>
 					</span>
 				</div>
-				<div id="deleteBtn" style="display:none" class="flex flex-col">
+				<div id="deleteBtn" class="hidden">
+					<input type="date" id="deletionDate" name="deletionDate"/>
 					<button
 						class="self-center m-2 py-1 px-4 font-semibold text-md text-white bg-red-500 rounded hover:bg-white hover:text-red-500 transition-colors duration-300"
 						onclick="deleteRecords()">Delete Player Records
@@ -568,21 +569,29 @@ function sendPostRequest(url, data, callback) {
 sendPostRequest("./api/login.php", ``, function(response) {
 	loggedin = true;
 	let deleteBtn = document.getElementById("deleteBtn");
-	deleteBtn.style.display = "block";
+	deleteBtn.className = "flex flex-col";
 });
 
 function deleteRecords() {
 	const params = getUrlParams();
 	const name = <?php echo json_encode(mb_convert_encoding($playerData["name"], 'UTF-8', "auto")); ?>;
+	const dateInput = document.getElementById("deletionDate").value;
+
+	if (!dateInput) {
+        alert("Please select a date before proceeding.");
+        return;
+    }
+
 	if (confirm(
 			`You are going to delete all records of player ${name} (ID: ${params.id}).\nAre you sure?`
 		)) {
 
-		const rank1Records = playerRecords.filter(record => record.rank === 1);
+		const rank1Records = playerRecords.filter(record => record.rank === 1 && record.recorddate < dateInput);
 		const rank1RecordsJson = JSON.stringify(rank1Records);
+		
 
 		sendPostRequest("./api/delete_player.php",
-			`id=${params.id}&rank1Records=${encodeURIComponent(rank1RecordsJson)}`,
+			`id=${params.id}&rank1Records=${encodeURIComponent(rank1RecordsJson)}&date=${encodeURIComponent(dateInput)}`,
 			function(response) {
 				console.log(response);
 			}

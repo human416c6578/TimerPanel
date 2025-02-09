@@ -24,9 +24,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['id'])) {
         $playerId = $_POST['id'];
         $rank1Records = isset($_POST['rank1Records']) ? json_decode($_POST['rank1Records'], true) : [];
+        $date = $_POST['date'];
+
 
         // Pass the rank1Records to the delete_player function
-        $result = $db->delete_player($playerId, $rank1Records);
+        $result = $db->delete_player($playerId, $rank1Records, $date);
 
         // Return the result as a JSON response
         echo json_encode($result);
